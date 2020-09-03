@@ -1,0 +1,47 @@
+{
+  "name": "@dura/stat",
+  "version": "0.0.1-alpha.9",
+  "description": "nexu dura stat",
+  "main": "./lib/index.js",
+  "typings": "index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npx rollup --config rollup.config.pro.js",
+    "build:w": "npx rollup --config rollup.config.pro.js -w",
+    "test": "npx jest",
+    "test:w": "npx jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ityuany/dura-next.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ityuany/dura-next/issues"
+  },
+  "homepage": "https://github.com/ityuany/dura-next#readme",
+  "peerDependencies": {
+    "immer": "^7.0.8",
+    "invariant": "^2.2.4",
+    "lodash.isplainobject": "^4.0.6",
+    "react": "^16.13.1",
+    "redux": "^4.0.5"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^5.0.2",
+    "@types/invariant": "^2.2.34",
+    "@types/jest": "^26.0.13",
+    "@types/lodash.isplainobject": "^4.0.6",
+    "@types/react": "^16.9.49",
+    "jest": "^26.4.2",
+    "rollup": "^2.26.9",
+    "ts-jest": "^26.3.0",
+    "ts-node": "^9.0.0",
+    "tslib": "^2.0.1",
+    "typescript": "^4.0.2",
+    "utility-types": "^3.10.0"
+  }
+}
