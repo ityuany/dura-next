@@ -19,7 +19,7 @@ export interface Effect<S> {
 }
 
 export interface Reducer<S = any> {
-  (state, action): void;
+  (state: S, action): void;
 }
 
 export interface Reducers<S> {
@@ -35,7 +35,7 @@ export type Effects<S> = MapObject<Effect<S>>;
 export interface Store<N extends Namespace, S = MapObject> {
   namespace: N;
   state: S;
-  reducers?: Reducers<any>;
+  reducers?: Reducers<S>;
   effects?: Effects<any>;
 }
 
