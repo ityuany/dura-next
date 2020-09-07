@@ -53,20 +53,24 @@ export function configura(options?: ConfiguraOptions) {
     return function prepare(...thunkStores) {
       const defineComponent = createDefineComponent(reduxStore);
 
-      function use() {
+      function UNSAFE_use() {
         operator.use(...thunkStores);
         reduxStore.replaceReducer(combineReducers(operator.getReducers()));
       }
 
-      function unUse() {
+      function UNSAFE_unUse() {
         operator.unUse(...thunkStores);
         reduxStore.replaceReducer(combineReducers(operator.getReducers()));
+      }
+
+      function use() {
+        UNSAFE_use();
+        return UNSAFE_unUse;
       }
 
       const factory = {
         ...reduxStore,
         use,
-        unUse,
         defineComponent,
       };
 

@@ -32,10 +32,10 @@ export interface EffectsMapObject {
 
 export type Effects<S> = MapObject<Effect<S>>;
 
-export interface Store<N extends Namespace, S = MapObject> {
+export interface Store<N extends Namespace, S = MapObject, R = Reducers<S>> {
   namespace: N;
   state: S;
-  reducers?: Reducers<S>;
+  reducers?: R;
   effects?: Effects<any>;
 }
 
@@ -53,22 +53,19 @@ export type UnionToIntersection<T> = (
   ? P
   : never;
 
-export type ReactFC<T extends string, SS = {}, O = {}> = React.FC<
-  { [K in T]: SS } & O
+export type ReactFC<T extends string, SS = {}, P = {}> = React.FC<
+  { [K in T]: SS } & P
 >;
 
 export interface DefineComponent<SS> {
-  (functionComponent: ReactFC<"store", SS>): React.FC;
   <N extends string>(key: N, functionComponent: ReactFC<N, SS>): React.FC;
   <N extends string, P extends MapObject>(
     key: N,
-    defaultProps: P,
     functionComponent: ReactFC<N, SS, P>
   ): React.FC<P>;
-  <P extends MapObject>(
-    defaultProps: P,
-    functionComponent: ReactFC<"store", SS, P>
-  ): React.FC<P>;
+  <P extends MapObject>(functionComponent: ReactFC<"store", SS, P>): React.FC<
+    P
+  >;
 }
 
 export type Return<T> = <
@@ -79,7 +76,6 @@ export type Return<T> = <
 >(
   ...thunkStores: P
 ) => import("redux").Store<T & GS> & {
-  use: () => void;
-  unUse: () => void;
+  use: () => () => void;
   defineComponent: DefineComponent<T & GS>;
 };

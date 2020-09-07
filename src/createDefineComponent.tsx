@@ -1,6 +1,7 @@
 import React, { useRef, memo, useEffect, useState } from "react";
 import { DURA_PATCHES_SYMBOL } from "./Symbol";
 import { createProxy } from "./createProxy";
+import invariant from "invariant";
 
 function useMonitor(reduxStore) {
   const [, setCount] = useState(0);
@@ -29,44 +30,38 @@ function useMonitor(reduxStore) {
 }
 
 function calcArguments(...args) {
-  let storePropsKey = "store";
+  args.slice(0, 2);
 
-  let defaultProps = {};
+  let storePropsKey = "store";
 
   const ComponentOfDuraDefault = (ownProps) => <></>;
 
   let UComponent = ComponentOfDuraDefault;
 
-  let index = -1;
-  while (++index < args.length) {
-    const argument = args[index];
-    if (typeof argument === "string") {
-      storePropsKey = argument;
-    }
-    if (typeof argument === "object") {
-      defaultProps = argument;
-    }
-    if (typeof argument === "function") {
-      UComponent = argument;
-    }
+  invariant(!(args.length === 0), "Incorrect number of parameters!");
+
+  if (args.length === 1) {
+    UComponent = args[0];
+  } else {
+    storePropsKey = args[0];
+    UComponent = args[1];
   }
+
   return {
     storePropsKey,
-    defaultProps,
     UComponent,
   };
 }
 
 export function createDefineComponent(reduxStore) {
   return function defineComponent(...args) {
-    const { storePropsKey, defaultProps, UComponent } = calcArguments(...args);
+    const { storePropsKey, UComponent } = calcArguments(...args);
     return memo(function ComponentOfDura(ownProps) {
       const [storeProxyRef] = useMonitor(reduxStore);
       return (
         <>
           <UComponent
             {...{
-              ...defaultProps,
               ...ownProps,
               [storePropsKey]: storeProxyRef.current,
             }}

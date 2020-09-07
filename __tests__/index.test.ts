@@ -1,19 +1,27 @@
-import { configura } from "..";
+import { configura, defineStore, Action } from "..";
 import { DURA_STORE_EFFECTS, DURA_STORE_REDUCERS } from "../src/Symbol";
 
-const user = {
+interface OnChangeShowPayload {
+  isShow: boolean;
+}
+
+interface OnChangeNamePayload {
+  name: string;
+}
+
+const user = defineStore({
   namespace: <const>"user",
   state: {
-    name: "x",
+    newName: "x",
     oriName: "default",
     isShow: false,
   },
   reducers: {
-    onChangeName(state, { payload: { id, name } }) {
-      state.users[id].name = name;
+    onChangeName(state, action: Action<OnChangeNamePayload>) {
+      state.newName = action.payload.name;
     },
-    onChangeStreetAddress(state, { payload: { id, streetAddress } }) {
-      state.users[id].streetAddress = streetAddress;
+    onChangeShow(state, action: Action<OnChangeShowPayload>) {
+      state.isShow = action.payload.isShow;
     },
     onChangeOriName(state, action) {
       state.oriName = String(Math.random());
@@ -22,8 +30,10 @@ const user = {
       state.isShow = !state.isShow;
     },
   },
-  effects: {},
-};
+  effects: {
+    async onAsyncChangeName(action) {},
+  },
+});
 
 const order = {
   namespace: <const>"order",
@@ -47,26 +57,30 @@ describe("test", function () {
     console.log(prepare()[DURA_STORE_EFFECTS]);
 
     const factory = prepare(order);
-    factory.use();
+
+    const unUse = factory.use();
 
     factory.defineComponent(function (props) {
+      props.store.user.newName;
+
       props.store.order;
       return null;
     });
 
-    factory.defineComponent("ss", function (props) {
-      props.ss.order;
+    factory.defineComponent<{ name1: string }>(function (props) {
+      props.store.user.isShow = false;
       return null;
     });
 
-    factory.defineComponent("ss", { name1: "" }, function (props) {
-      props.ss.order;
+    factory.defineComponent("a", function (props) {
+      props.a.order.orderId;
+      return null;
+    });
+
+    factory.defineComponent<"ss", { name1: string }>("ss", function (props) {
+      props.ss.order.orderId;
       props.name1;
-      return null;
-    });
 
-    factory.defineComponent({ name1: "" }, function (props) {
-      props.store.user;
       return null;
     });
 
