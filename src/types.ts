@@ -57,15 +57,9 @@ export type ReactFC<T extends string, SS = {}, P = {}> = React.FC<
   { [K in T]: SS } & P
 >;
 
-export interface DefineComponent<SS> {
-  <N extends string>(key: N, functionComponent: ReactFC<N, SS>): React.FC;
-  <N extends string, P extends MapObject>(
-    key: N,
-    functionComponent: ReactFC<N, SS, P>
-  ): React.FC<P>;
-  <P extends MapObject>(functionComponent: ReactFC<"store", SS, P>): React.FC<
-    P
-  >;
+export interface DefineComponent<N extends string, SS> {
+  (functionComponent: ReactFC<N, SS>): React.FC;
+  <P extends MapObject>(functionComponent: ReactFC<N, SS, P>): React.FC<P>;
 }
 
 export type Return<T> = <
@@ -77,5 +71,8 @@ export type Return<T> = <
   ...thunkStores: P
 ) => import("redux").Store<T & GS> & {
   use: () => () => void;
-  defineComponent: DefineComponent<T & GS>;
+  defineComponent: DefineComponent<"store", T & GS>;
+  defineStoreName: <N extends string>(
+    name: N
+  ) => { defineComponent: DefineComponent<N, T & GS> };
 };

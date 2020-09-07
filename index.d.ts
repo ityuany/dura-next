@@ -36,10 +36,7 @@ type WrapStore<
     [K in keyof T["reducers"]]: (state: S, action: Action) => void;
   };
   effects: {
-    [K in keyof T["effects"]]: (
-      getState: <S>() => S,
-      action: Action
-    ) => Promise<void>;
+    [K in keyof T["effects"]]: (action: Action) => Promise<void>;
   };
 };
 

@@ -53,6 +53,7 @@ describe("test", function () {
     const createStoreFactory = configura();
 
     const prepare = createStoreFactory([user]);
+
     console.log(prepare()[DURA_STORE_REDUCERS]);
     console.log(prepare()[DURA_STORE_EFFECTS]);
 
@@ -69,20 +70,17 @@ describe("test", function () {
 
     factory.defineComponent<{ name1: string }>(function (props) {
       props.store.user.isShow = false;
-      return null;
-    });
-
-    factory.defineComponent("a", function (props) {
-      props.a.order.orderId;
-      return null;
-    });
-
-    factory.defineComponent<"ss", { name1: string }>("ss", function (props) {
-      props.ss.order.orderId;
       props.name1;
-
       return null;
     });
+
+    factory
+      .defineStoreName("ss")
+      .defineComponent<{ name: string }>(function (props) {
+        props.ss.order.orderId;
+        props.name;
+        return null;
+      });
 
     console.log(prepare()[DURA_STORE_REDUCERS]);
     console.log(prepare()[DURA_STORE_EFFECTS]);

@@ -53,6 +53,11 @@ export function configura(options?: ConfiguraOptions) {
     return function prepare(...thunkStores) {
       const defineComponent = createDefineComponent(reduxStore);
 
+      const defineStoreName = (name: string) => ({
+        defineComponent: (functionComponent) =>
+          defineComponent(name, functionComponent),
+      });
+
       function UNSAFE_use() {
         operator.use(...thunkStores);
         reduxStore.replaceReducer(combineReducers(operator.getReducers()));
@@ -72,6 +77,7 @@ export function configura(options?: ConfiguraOptions) {
         ...reduxStore,
         use,
         defineComponent,
+        defineStoreName,
       };
 
       defineHiddenConstantProperty(
