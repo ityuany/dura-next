@@ -17,7 +17,10 @@ import { operatorFactory } from "./operator";
 import { DURA_STORE_EFFECTS, DURA_STORE_REDUCERS } from "./Symbol";
 import { defineHiddenConstantProperty } from "./defineHiddenConstantProperty";
 import { enablePatches, setAutoFreeze } from "immer";
-import { createDefineComponent } from "./createDefineComponent";
+import { useMonitor } from "./createDefineComponent";
+import duraStore from "./duraStore";
+import { createAsyncMiddleware } from "./createAsyncMiddleware";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 enablePatches();
 setAutoFreeze(false);
@@ -42,42 +45,66 @@ export function configura(options?: ConfiguraOptions) {
 
     const operator = operatorFactory();
 
-    operator.use(...stores);
+    operator.use(...stores, duraStore);
 
     const reduxStore = createStore(
       combineReducers(operator.getReducers()),
       preloadState,
-      compose(applyMiddleware(...middlewares), ...enhancers)
+      compose(
+        applyMiddleware(
+          ...middlewares,
+          createAsyncMiddleware(
+            (namespace, effectName) =>
+              operator.getEffects()?.[namespace]?.[effectName]
+          )
+        ),
+        ...enhancers
+      )
     );
 
     return function prepare(...thunkStores) {
-      const defineComponent = createDefineComponent(reduxStore);
+      const key = thunkStores.map((n) => n.namespace).join(".");
 
-      const defineStoreName = (name: string) => ({
-        defineComponent: (functionComponent) =>
-          defineComponent(name, functionComponent),
-      });
+      function useMountStore() {
+        const [count, setCount] = useState(0);
+        useLayoutEffect(() => {
+          UNSAFE_use(...thunkStores);
+          UNSAFE_refresh();
+          setCount(Math.random());
+          return () => {
+            UNSAFE_unUse(...thunkStores);
+            UNSAFE_refresh();
+            setCount(Math.random());
+          };
+        }, []);
+        return count;
+      }
 
-      function UNSAFE_use() {
-        operator.use(...thunkStores);
+      function useStore(deps = []) {
+        return useMonitor(reduxStore, deps, key);
+      }
+
+      function UNSAFE_refresh() {
+        reduxStore.dispatch({
+          type: "@@DURA/UPDATE",
+          payload: { REFRESH: key },
+        });
+      }
+
+      function UNSAFE_use(...args) {
+        operator.use(...args);
         reduxStore.replaceReducer(combineReducers(operator.getReducers()));
       }
 
-      function UNSAFE_unUse() {
-        operator.unUse(...thunkStores);
+      function UNSAFE_unUse(...args) {
+        operator.unUse(...args);
         reduxStore.replaceReducer(combineReducers(operator.getReducers()));
-      }
-
-      function use() {
-        UNSAFE_use();
-        return UNSAFE_unUse;
       }
 
       const factory = {
         ...reduxStore,
-        use,
-        defineComponent,
-        defineStoreName,
+        useStore,
+        useMountStore,
       };
 
       defineHiddenConstantProperty(

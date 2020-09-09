@@ -1,18 +1,21 @@
-import { configura } from "../src/index";
+import { configura, defineStore } from "..";
 import { createAsyncMiddleware } from "../src/createAsyncMiddleware";
 
-const userModel = {
+const userModel = defineStore({
   namespace: "user",
   state: {
     /** 姓名 */
     name: "张三",
   },
   reducers: {
-    onChangeName(state, action) {
+    onChangeName(state, action: any) {
+      console.log("action->", action);
+
       return { ...state, name: action.payload.name };
     },
   },
-};
+  effects: {},
+});
 
 describe("test dura-async", function () {
   it("test async middleware", function () {

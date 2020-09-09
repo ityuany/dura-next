@@ -19,7 +19,7 @@ export interface Effect<S> {
 }
 
 export interface Reducer<S = any> {
-  (state: S, action): void;
+  (state: S, action): void | S;
 }
 
 export interface Reducers<S> {
@@ -70,9 +70,6 @@ export type Return<T> = <
 >(
   ...thunkStores: P
 ) => import("redux").Store<T & GS> & {
-  use: () => () => void;
-  defineComponent: DefineComponent<"store", T & GS>;
-  defineStoreName: <N extends string>(
-    name: N
-  ) => { defineComponent: DefineComponent<N, T & GS> };
+  useStore: (deps?: any[]) => T & GS;
+  useMountStore: () => void;
 };

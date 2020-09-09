@@ -10,7 +10,7 @@ interface OnChangeNamePayload {
 }
 
 const user = defineStore({
-  namespace: <const>"user",
+  namespace: "user",
   state: {
     newName: "x",
     oriName: "default",
@@ -35,8 +35,8 @@ const user = defineStore({
   },
 });
 
-const order = {
-  namespace: <const>"order",
+const order = defineStore({
+  namespace: "order",
   state: {
     orderId: 12,
   },
@@ -46,7 +46,7 @@ const order = {
     },
   },
   effects: {},
-};
+});
 
 describe("test", function () {
   it("dd", function () {
@@ -59,28 +59,11 @@ describe("test", function () {
 
     const factory = prepare(order);
 
-    const unUse = factory.use();
+    function A() {
+      const state = factory.useStore();
 
-    factory.defineComponent(function (props) {
-      props.store.user.newName;
-
-      props.store.order;
       return null;
-    });
-
-    factory.defineComponent<{ name1: string }>(function (props) {
-      props.store.user.isShow = false;
-      props.name1;
-      return null;
-    });
-
-    factory
-      .defineStoreName("ss")
-      .defineComponent<{ name: string }>(function (props) {
-        props.ss.order.orderId;
-        props.name;
-        return null;
-      });
+    }
 
     console.log(prepare()[DURA_STORE_REDUCERS]);
     console.log(prepare()[DURA_STORE_EFFECTS]);

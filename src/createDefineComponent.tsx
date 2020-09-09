@@ -1,82 +1,64 @@
-import React, { useRef, memo, useEffect, useState } from "react";
+import {
+  useRef,
+  useLayoutEffect,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { DURA_PATCHES_SYMBOL } from "./Symbol";
 import { createProxy } from "./createProxy";
-import invariant from "invariant";
 
-function useMonitor(reduxStore) {
+export function useMonitor(reduxStore, subscribeDeps, key) {
   const [, setCount] = useState(0);
   const deps = useRef<Map<string, number>>(new Map<string, number>());
   const storeProxyRef = useRef(
     createProxy(reduxStore.getState(), deps.current)
   );
   const storeOriginalRef = useRef(reduxStore.getState());
-  useEffect(
-    () =>
-      reduxStore.subscribe(() => {
-        const originalStore = reduxStore.getState();
-        const proxyStore = createProxy(originalStore, deps.current);
-        const memo = deepEqualProxyStore(proxyStore, deps.current);
-        if (!memo) {
-          storeProxyRef.current = proxyStore;
-          storeOriginalRef.current = originalStore;
-          deps.current.clear();
-          //TODO 更新逻辑需要优化
-          setCount(Math.random());
-        }
-      }),
-    []
-  );
-  return [storeProxyRef];
-}
 
-function calcArguments(...args) {
-  args.slice(0, 2);
+  const subscribe = useCallback(() => {
+    const originalStore = reduxStore.getState();
 
-  let storePropsKey = "store";
+    const proxyStore = createProxy(originalStore, deps.current);
+    const memo = deepEqualProxyStore(proxyStore, deps.current, key);
 
-  const ComponentOfDuraDefault = (ownProps) => <></>;
+    if (!memo) {
+      storeProxyRef.current = proxyStore;
+      storeOriginalRef.current = originalStore;
+      deps.current.clear();
+      //TODO 更新逻辑需要优化
+      setCount(Math.random());
+    }
+  }, []);
 
-  let UComponent = ComponentOfDuraDefault;
+  useLayoutEffect(() => reduxStore.subscribe(subscribe), []);
 
-  invariant(!(args.length === 0), "Incorrect number of parameters!");
-
-  if (args.length === 1) {
-    UComponent = args[0];
-  } else {
-    storePropsKey = args[0];
-    UComponent = args[1];
-  }
-
-  return {
-    storePropsKey,
-    UComponent,
-  };
-}
-
-export function createDefineComponent(reduxStore) {
-  return function defineComponent(...args) {
-    const { storePropsKey, UComponent } = calcArguments(...args);
-    return memo(function ComponentOfDura(ownProps) {
-      const [storeProxyRef] = useMonitor(reduxStore);
-      return (
-        <>
-          <UComponent
-            {...{
-              ...ownProps,
-              [storePropsKey]: storeProxyRef.current,
-            }}
-          />
-        </>
-      );
-    }, createShallowEqual(storePropsKey));
-  };
+  useLayoutEffect(() => {
+    const originalStore = reduxStore.getState();
+    storeProxyRef.current = createProxy(originalStore, deps.current);
+    storeOriginalRef.current = originalStore;
+    deps.current.clear();
+    //TODO 更新逻辑需要优化
+    setCount(Math.random());
+  }, subscribeDeps);
+  return storeProxyRef.current;
 }
 
 function deepEqualProxyStore<P, D extends Map<string, number>>(
   nextPropsStore: P,
-  deps: D
+  deps: D,
+  key
 ) {
   const values = Object.values(nextPropsStore);
+
+  if (
+    key &&
+    nextPropsStore["@@DURA"][DURA_PATCHES_SYMBOL].includes("@@DURA.REFRESH") &&
+    nextPropsStore["@@DURA"]["REFRESH"].startsWith(key)
+  ) {
+    return false;
+  }
+
   let index = -1;
   while (++index < values.length) {
     const patches = values[index][DURA_PATCHES_SYMBOL];
@@ -88,30 +70,4 @@ function deepEqualProxyStore<P, D extends Map<string, number>>(
     }
   }
   return true;
-}
-
-function createShallowEqual(propsKey: string) {
-  return function shallowEqual(prevProps, nextProps) {
-    const filterStore = (key: string) => key !== propsKey;
-    const prevPropsKey = Object.keys(prevProps).filter(filterStore);
-    const nextPropsKey = Object.keys(nextProps).filter(filterStore);
-    if (prevPropsKey.length !== nextPropsKey.length) {
-      return false;
-    }
-    const hasOwnProperty = Object.prototype.hasOwnProperty;
-    let index = -1;
-    const len = prevPropsKey.length;
-    while (++index < len) {
-      const prevKey = prevPropsKey[index];
-      const nextPropsHasOwnProperty = hasOwnProperty.call(nextProps, prevKey);
-
-      const referenceEqual = prevProps[prevKey][DURA_PATCHES_SYMBOL]
-        ? shallowEqual(prevProps[prevKey], nextProps[prevKey])
-        : prevProps[prevKey] === nextProps[prevKey];
-      if (!nextPropsHasOwnProperty || !referenceEqual) {
-        return false;
-      }
-    }
-    return true;
-  };
 }

@@ -18,6 +18,10 @@ export function createProxy(state, deps, parentPath?) {
 
       const path = caclPath(parentPath, property);
 
+      if (value === undefined) {
+        return createProxy({}, deps, path);
+      }
+
       if (isPlainObject(value) || Array.isArray(value)) {
         defineHiddenConstantProperty(value, DURA_SYMBOL, 1);
         return createProxy(value, deps, path);

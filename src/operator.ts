@@ -1,7 +1,7 @@
 import type { ReducersMapObject } from "redux";
 import type { EffectsMapObject, Store } from "./types";
 import invariant from "invariant";
-import { produceWithPatches } from "immer";
+import { produceWithPatches, produce } from "immer";
 import { defineHiddenConstantProperty } from "./defineHiddenConstantProperty";
 import { DURA_PATCHES_SYMBOL } from "./Symbol";
 
@@ -32,6 +32,7 @@ export function operatorFactory() {
         );
         return nextState;
       };
+
       effects[store.namespace] = store.effects;
     }
   }
@@ -47,6 +48,10 @@ export function operatorFactory() {
     }
   }
 
+  function has(namespace: string) {
+    return namespace in reducers;
+  }
+
   function getReducers() {
     return reducers;
   }
@@ -60,5 +65,6 @@ export function operatorFactory() {
     unUse,
     getReducers,
     getEffects,
+    has,
   };
 }
